@@ -1,0 +1,85 @@
+# Byte-compiled / optimized / DLL files
+# Pythonキャッシュ
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+# C拡張
+*.so
+
+# Distribution / packaging
+# パッケージング
+.Python
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Environments
+# 仮想環境
+.env
+.envrc
+.venv/
+venv/
+ENV/
+env/
+.envi
+
+# IDEs and editors
+# IDE/エディタ固有の設定
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ログファイル
+*.log
+
+# Unit test / coverage reports
+# ユニットテスト / カバレッジレポート
+htmlcov/
+.coverage
+.coverage.*
+.cache
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Sphinx documentation
+# Sphinxドキュメント
+docs/_build/
+doc/build/
+doc/_build/
+
+# Blender固有のファイル
+*.blend1
+*.blend2
+*.blend3
+*.blend4
+*.blend5
+*.backup
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+
+# その他
+*.bak
