@@ -11,7 +11,7 @@ bl_info = {
     "blender": (2, 80, 0),
     "location": "Graph Editor",
     "description": "Move keyframe selection in the Graph Editor",
-    "warning": "",
+    "warning": "It'll explode",
     "wiki_url": "",
     "category": "Animation",
 }
