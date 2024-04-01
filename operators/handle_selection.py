@@ -9,7 +9,7 @@ class GRAPH_OT_monkey_handle_selecter(bpy.types.Operator):
     bl_label = "Toggle Handle Selection"
     bl_options = {'REGISTER', 'UNDO'}
 
-    handle_direction: bpy.props.EnumProperty(
+    handle_direction: bpy.props.EnumProperty(  # type: ignore
         name="Handle Direction",
         items=[
             ("Left", "Left", ""),
@@ -17,7 +17,7 @@ class GRAPH_OT_monkey_handle_selecter(bpy.types.Operator):
         ],
         default="Left"
     )
-    extend: bpy.props.BoolProperty(default=False)
+    extend: bpy.props.BoolProperty(default=False)  # type: ignore
 
     @classmethod
     def poll(cls, context):

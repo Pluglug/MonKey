@@ -10,7 +10,7 @@ class GRAPH_OT_monkey_horizontally(bpy.types.Operator):
     bl_label = "Move Keyframe Selection Horizontally"
     bl_options = {'REGISTER', 'UNDO'}
 
-    direction: bpy.props.EnumProperty(
+    direction: bpy.props.EnumProperty(  # type: ignore
         name="Direction",
         items=[
             ("forward", "Forward", ""),
@@ -18,7 +18,7 @@ class GRAPH_OT_monkey_horizontally(bpy.types.Operator):
         ],
         default="forward"
     )
-    extend: bpy.props.BoolProperty(default=False)
+    extend: bpy.props.BoolProperty(default=False)  # type: ignore
 
     @classmethod
     def poll(cls, context):
@@ -41,7 +41,7 @@ class GRAPH_OT_monkey_vertically(bpy.types.Operator):
     bl_label = "Move Channel Selection Vertically"
     bl_options = {'REGISTER', 'UNDO'}
 
-    direction: bpy.props.EnumProperty(
+    direction: bpy.props.EnumProperty(  # type: ignore
         name="Direction",
         items=[
             ("upward", "Upward", ""),
@@ -49,7 +49,7 @@ class GRAPH_OT_monkey_vertically(bpy.types.Operator):
         ],
         default="downward"
     )
-    extend: bpy.props.BoolProperty(default=False)
+    extend: bpy.props.BoolProperty(default=False)  # type: ignore
 
     @classmethod
     def poll(cls, context):

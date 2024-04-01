@@ -9,15 +9,15 @@ from . operators.handle_selection import GRAPH_OT_monkey_handle_selecter
 
 class MonKeyPreferences(bpy.types.AddonPreferences):
     bl_idname = ADDON_ID
-
-    forward_key: bpy.props.StringProperty(name="Forward Key", default="D")
-    forward_key_extend: bpy.props.StringProperty(name="Forward Key (Extend)", default="D")
-    backward_key: bpy.props.StringProperty(name="Backward Key", default="A")
-    backward_key_extend: bpy.props.StringProperty(name="Backward Key (Extend)", default="A")
-    upward_key: bpy.props.StringProperty(name="Upward Key", default="W")
-    upward_key_extend: bpy.props.StringProperty(name="Upward Key (Extend)", default="W")
-    downward_key: bpy.props.StringProperty(name="Downward Key", default="S")
-    downward_key_extend: bpy.props.StringProperty(name="Downward Key (Extend)", default="S")
+    # TODO: pyiファイル作成後、すべての"  # type: ignore"を削除する
+    forward_key: bpy.props.StringProperty(name="Forward Key", default="D")  # type: ignore
+    forward_key_extend: bpy.props.StringProperty(name="Forward Key (Extend)", default="D")  # type: ignore
+    backward_key: bpy.props.StringProperty(name="Backward Key", default="A")  # type: ignore
+    backward_key_extend: bpy.props.StringProperty(name="Backward Key (Extend)", default="A")  # type: ignore
+    upward_key: bpy.props.StringProperty(name="Upward Key", default="W")  # type: ignore
+    upward_key_extend: bpy.props.StringProperty(name="Upward Key (Extend)", default="W")  # type: ignore
+    downward_key: bpy.props.StringProperty(name="Downward Key", default="S")  # type: ignore
+    downward_key_extend: bpy.props.StringProperty(name="Downward Key (Extend)", default="S")  # type: ignore
 
     # def draw(self, context):
     #     layout = self.layout
