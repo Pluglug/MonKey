@@ -21,24 +21,33 @@ addon.BL_VERSION = bl_info["blender"]
 
 from . operators.keyframe_moving import GRAPH_OT_monkey_horizontally, GRAPH_OT_monkey_vertically
 from . operators.handle_selection import GRAPH_OT_monkey_handle_selecter
-from . preferences import MonKeyPreferences, register_keymaps, unregister_keymaps
+from . preferences import MonKeyPreferences
+from . keymap import register_keymaps, unregister_keymaps
+
+classes = (
+    GRAPH_OT_monkey_horizontally,
+    GRAPH_OT_monkey_vertically,
+    GRAPH_OT_monkey_handle_selecter,
+    MonKeyPreferences,
+)
+
 
 def register():
     DBG_INIT and log.header("Registering MonKey", "INIT")
     DBG_INIT and log.info("Version: " + str(addon.VERSION))
-    bpy.utils.register_class(GRAPH_OT_monkey_horizontally)
-    bpy.utils.register_class(GRAPH_OT_monkey_vertically)
-    bpy.utils.register_class(GRAPH_OT_monkey_handle_selecter)
-    bpy.utils.register_class(MonKeyPreferences)
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class(cls)
+    # bpy.types.Scene.monkey_preferences = bpy.props.PointerProperty(type=MonKeyPreferences)
     register_keymaps()
 
 def unregister():
     DBG_INIT and log.header("Unregistering MonKey", "INIT")
     unregister_keymaps()
-    bpy.utils.unregister_class(GRAPH_OT_monkey_horizontally)
-    bpy.utils.unregister_class(GRAPH_OT_monkey_vertically)
-    bpy.utils.unregister_class(GRAPH_OT_monkey_handle_selecter)
-    bpy.utils.unregister_class(MonKeyPreferences)
+    from bpy.utils import unregister_class
+    for cls in reversed(classes):
+        unregister_class(cls)
+    # del bpy.types.Scene.monkey_preferences
 
 if __name__ == "__main__":
     pass
