@@ -22,16 +22,21 @@ class GRAPH_OT_monkey_horizontally(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.area.type != 'GRAPH_EDITOR':
-            return False
+        return context.area.type == 'GRAPH_EDITOR'
+        # if context.area.type != 'GRAPH_EDITOR':
+        #     return False
 
-        dopesheet = context.space_data.dopesheet
-        visible_objects = get_visible_objects(dopesheet)
-        return bool(visible_objects)
+        # dopesheet = context.space_data.dopesheet
+        # visible_objects = get_visible_objects(dopesheet)
+        # return bool(visible_objects)  # チェックが完全でないし、操作時混乱する。
 
     def execute(self, context):
         dopesheet = context.space_data.dopesheet
         visible_objects = get_visible_objects(dopesheet)
+        if not visible_objects:
+            self.report({'ERROR'}, "There is no object that is displayed and has an action.")
+            return {'CANCELLED'}
+
         move_keyframe_selection_horizontally(self.direction, self.extend, visible_objects)
         return {'FINISHED'}
 
@@ -53,16 +58,21 @@ class GRAPH_OT_monkey_vertically(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.area.type != 'GRAPH_EDITOR':
-            return False
+        return context.area.type == 'GRAPH_EDITOR'
+        # if context.area.type != 'GRAPH_EDITOR':
+        #     return False
 
-        dopesheet = context.space_data.dopesheet
-        visible_objects = get_visible_objects(dopesheet)
-        return bool(visible_objects)
+        # dopesheet = context.space_data.dopesheet
+        # visible_objects = get_visible_objects(dopesheet)
+        # return bool(visible_objects)
 
     def execute(self, context):
         dopesheet = context.space_data.dopesheet
         visible_objects = get_visible_objects(dopesheet)
+        if not visible_objects:
+            self.report({'ERROR'}, "There is no object that is displayed and has an action.")
+            return {'CANCELLED'}
+        
         move_channel_selection_vertically(self.direction, self.extend, visible_objects)
         return {'FINISHED'}
 
