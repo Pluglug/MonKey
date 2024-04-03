@@ -1,4 +1,7 @@
 import bpy
+# import rna_keymap_ui
+from rna_keymap_ui import draw_kmi
+
 from . debug import log, DBG_PREFS
 
 from . addon import ADDON_ID
@@ -6,114 +9,36 @@ from . addon import ADDON_ID
 from . operators.keyframe_moving import GRAPH_OT_monkey_horizontally, GRAPH_OT_monkey_vertically
 from . operators.handle_selection import GRAPH_OT_monkey_handle_selecter
 
+ops_idnames = [
+    GRAPH_OT_monkey_horizontally.bl_idname,
+    GRAPH_OT_monkey_vertically.bl_idname,
+    GRAPH_OT_monkey_handle_selecter.bl_idname,
+]
 
 class MonKeyPreferences(bpy.types.AddonPreferences):
     bl_idname = ADDON_ID
-    # TODO: pyiファイル作成後、すべての"  # type: ignore"を削除する
-    forward_key: bpy.props.StringProperty(name="Forward Key", default="D")  # type: ignore
-    forward_key_extend: bpy.props.StringProperty(name="Forward Key (Extend)", default="D")  # type: ignore
-    backward_key: bpy.props.StringProperty(name="Backward Key", default="A")  # type: ignore
-    backward_key_extend: bpy.props.StringProperty(name="Backward Key (Extend)", default="A")  # type: ignore
-    upward_key: bpy.props.StringProperty(name="Upward Key", default="W")  # type: ignore
-    upward_key_extend: bpy.props.StringProperty(name="Upward Key (Extend)", default="W")  # type: ignore
-    downward_key: bpy.props.StringProperty(name="Downward Key", default="S")  # type: ignore
-    downward_key_extend: bpy.props.StringProperty(name="Downward Key (Extend)", default="S")  # type: ignore
 
-    # def draw(self, context):
-    #     layout = self.layout
-    #     layout.label(text="Key Bindings:")
+    def draw(self, context):
+        layout = self.layout
 
-    #     col = layout.column(align=True)
-    #     col.prop(self, "upward_key")
-    #     col.prop(self, "upward_key_extend")
+        self.draw_keymap(layout)
+    
+    def draw_keymap(self, layout):
+        wm = bpy.context.window_manager
+        kc = wm.keyconfigs.addon
+        km = kc.keymaps.get('Graph Editor')
 
-    #     col = layout.column(align=True)
-    #     col.prop(self, "forward_key")
-    #     col.prop(self, "forward_key_extend")
+        if not km:
+            return
+        
+        layout.label(text="MonKey Keymap")
 
-    #     col = layout.column(align=True)
-    #     col.prop(self, "backward_key")
-    #     col.prop(self, "backward_key_extend")
+        for kmi in km.keymap_items:
+            if kmi.idname in ops_idnames:
+                draw_kmi([], kc, km, kmi, layout, 0)
+                layout.separator()
 
-    #     col = layout.column(align=True)
-    #     col.prop(self, "downward_key")
-    #     col.prop(self, "downward_key_extend")
-
-
-addon_keymaps = []
-
-
-def register_keymaps():
-    wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(name='Graph Editor', space_type='GRAPH_EDITOR')
-
-    preferences = bpy.context.preferences.addons[__name__].preferences
-
-    # Upward
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_vertically.bl_idname, type=preferences.upward_key, value='PRESS', alt=True)
-    kmi.properties.direction = "upward"
-    kmi.properties.extend = False
-
-    # Upward Extend
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_vertically.bl_idname, type=preferences.upward_key_extend, value='PRESS', alt=True, shift=True)
-    kmi.properties.direction = "upward"
-    kmi.properties.extend = True
-
-    # Downward
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_vertically.bl_idname, type=preferences.downward_key, value='PRESS', alt=True)
-    kmi.properties.direction = "downward"
-    kmi.properties.extend = False
-
-    # Downward Extend
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_vertically.bl_idname, type=preferences.downward_key_extend, value='PRESS', alt=True, shift=True)
-    kmi.properties.direction = "downward"
-    kmi.properties.extend = True
-
-    # Forward
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_horizontally.bl_idname, type=preferences.forward_key, value='PRESS', alt=True)
-    kmi.properties.direction = "forward"
-    kmi.properties.extend = False
-
-    # Forward Extend
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_horizontally.bl_idname, type=preferences.forward_key_extend, value='PRESS', alt=True, shift=True)
-    kmi.properties.direction = "forward"
-    kmi.properties.extend = True
-
-    # Backward
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_horizontally.bl_idname, type=preferences.backward_key, value='PRESS', alt=True)
-    kmi.properties.direction = "backward"
-    kmi.properties.extend = False
-
-    # Backward Extend
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_horizontally.bl_idname, type=preferences.backward_key_extend, value='PRESS', alt=True, shift=True)
-    kmi.properties.direction = "backward"
-    kmi.properties.extend = True
-
-    # Left
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_handle_selecter.bl_idname, type='Q', value='PRESS', alt=True)
-    kmi.properties.handle_direction = "Left"
-    kmi.properties.extend = False
-
-    # Left Extend
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_handle_selecter.bl_idname, type='Q', value='PRESS', alt=True, shift=True)
-    kmi.properties.handle_direction = "Left"
-    kmi.properties.extend = True
-
-    # Right
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_handle_selecter.bl_idname, type='E', value='PRESS', alt=True)
-    kmi.properties.handle_direction = "Right"
-    kmi.properties.extend = False
-
-    # Right Extend
-    kmi = km.keymap_items.new(GRAPH_OT_monkey_handle_selecter.bl_idname, type='E', value='PRESS', alt=True, shift=True)
-    kmi.properties.handle_direction = "Right"
-    kmi.properties.extend = True
-
-    addon_keymaps.append(km)
-
-
-def unregister_keymaps():
-    wm = bpy.context.window_manager
-    for km in addon_keymaps:
-        wm.keyconfigs.addon.keymaps.remove(km)
-    addon_keymaps.clear()
+# del ops_idnames
+# del GRAPH_OT_monkey_horizontally
+# del GRAPH_OT_monkey_vertically
+# del GRAPH_OT_monkey_handle_selecter
