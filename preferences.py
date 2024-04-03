@@ -25,7 +25,7 @@ class MonKeyPreferences(bpy.types.AddonPreferences):
     
     def draw_keymap(self, layout):
         wm = bpy.context.window_manager
-        kc = wm.keyconfigs.addon
+        kc = wm.keyconfigs.user
         km = kc.keymaps.get('Graph Editor')
 
         if not km:
@@ -36,7 +36,7 @@ class MonKeyPreferences(bpy.types.AddonPreferences):
         for kmi in km.keymap_items:
             if kmi.idname in ops_idnames:
                 draw_kmi([], kc, km, kmi, layout, 0)
-                layout.separator()
+                # layout.separator()
 
 # del ops_idnames
 # del GRAPH_OT_monkey_horizontally
