@@ -16,3 +16,6 @@ def uprefs():
 
 def prefs():
     return uprefs().addons[ADDON_ID].preferences
+
+def is_40():
+    return bpy.app.version >= (4, 0, 0)
