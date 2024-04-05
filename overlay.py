@@ -4,7 +4,7 @@ import blf
 import re
 from time import time
 
-from addon import prefs, is_40
+from addon import prefs, since_4_0_0
 from debug import log, DBG_OVLY
 
 OVERLAY_ALIGNMENT_ITEMS = [
@@ -18,7 +18,7 @@ OVERLAY_ALIGNMENT_ITEMS = [
 
 
 def blf_size(font_id, size, *args, **kwargs):
-    if is_40():
+    if since_4_0_0():
         blf.size(font_id, size)
     else:
         blf.size(font_id, size, 72)
