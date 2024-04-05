@@ -1,14 +1,15 @@
-bl_info = {
-    "name": "MonKey",
-    "author": "Pluglug",
-    "version": (0, 6, 5),
-    "blender": (2, 80, 0),
-    "location": "Graph Editor",
-    "description": "Move keyframe selection in the Graph Editor",
-    "warning": "",
-    "wiki_url": "",
-    "category": "Animation",
-}
+# bl_info = {
+#     "name": "MonKey",
+#     "author": "Pluglug",
+#     "version": (0, 6, 5),
+#     "blender": (2, 80, 0),
+#     "location": "Graph Editor",
+#     "description": "Move keyframe selection in the Graph Editor",
+#     "warning": "",
+#     "wiki_url": "",
+#     "category": "Animation",
+# }
+# pyright: reportInvalidTypeForm=false
 
 import bpy
 import blf
@@ -90,8 +91,8 @@ class GRAPH_OT_monkey_vertically(bpy.types.Operator):
         move_channel_selection_vertically(self.direction, self.extend, visible_objects)
         
         # Get channel information
-        display_props = context.scene.monkey_display_properties
-        channel_info = get_channel_info(visible_objects, display_props)
+        # display_props = context.scene.monkey_display_properties
+        channel_info = get_channel_info(visible_objects)  #, display_props)
         if channel_info:
             print(channel_info)
             print()
@@ -99,7 +100,12 @@ class GRAPH_OT_monkey_vertically(bpy.types.Operator):
             # Draw text overlay using display properties
             region = context.region
             width = region.width / 2 + display_props.text_position_x
-            bpy.ops.graph.draw_text(text=channel_info, coords=(width, display_props.text_position_y), center=True, color=display_props.text_color, time=display_props.display_time, alpha=0.5)
+            bpy.ops.graph.draw_text(text=channel_info, 
+                                    coords=(width, display_props.text_position_y), 
+                                    center=True, 
+                                    color=display_props.text_color, 
+                                    time=display_props.display_time, 
+                                    alpha=0.5)
 
         return {'FINISHED'}
 
@@ -155,7 +161,7 @@ def draw_text(context, text, coords=None, center=True, color=(1, 1, 1), alpha=1,
 
     font = 0
 
-    blf.size(font, fontsize, 72)
+    blf.size(font, fontsize)
     blf.color(font, *color, alpha)
 
     if center:
@@ -756,27 +762,27 @@ def unregister_keymaps():
         wm.keyconfigs.addon.keymaps.remove(km)
     addon_keymaps.clear()
 
-# Update register and unregister functions
-def register():
-    bpy.utils.register_class(GRAPH_OT_monkey_horizontally)
-    bpy.utils.register_class(GRAPH_OT_monkey_vertically)
-    bpy.utils.register_class(GRAPH_OT_monkey_handle_selecter)
-    bpy.utils.register_class(GRAPH_OT_draw_text)
-    bpy.utils.register_class(GRAPH_OT_select_adjacent_handles)
-    # bpy.utils.register_class(MonKeyDisplayProperties)
-    bpy.utils.register_class(MonKeyPreferences)
-    register_keymaps()
+# # Update register and unregister functions
+# def register():
+#     bpy.utils.register_class(GRAPH_OT_monkey_horizontally)
+#     bpy.utils.register_class(GRAPH_OT_monkey_vertically)
+#     bpy.utils.register_class(GRAPH_OT_monkey_handle_selecter)
+#     bpy.utils.register_class(GRAPH_OT_draw_text)
+#     bpy.utils.register_class(GRAPH_OT_select_adjacent_handles)
+#     # bpy.utils.register_class(MonKeyDisplayProperties)
+#     bpy.utils.register_class(MonKeyPreferences)
+#     register_keymaps()
 
-def unregister():
-    unregister_keymaps()
-    bpy.utils.unregister_class(MonKeyPreferences)
-    # bpy.utils.unregister_class(MonKeyDisplayProperties)
-    bpy.utils.unregister_class(GRAPH_OT_select_adjacent_handles)
-    bpy.utils.unregister_class(GRAPH_OT_draw_text)
-    bpy.utils.unregister_class(GRAPH_OT_monkey_handle_selecter)
-    bpy.utils.unregister_class(GRAPH_OT_monkey_vertically)
-    bpy.utils.unregister_class(GRAPH_OT_monkey_horizontally)
+# def unregister():
+#     unregister_keymaps()
+#     bpy.utils.unregister_class(MonKeyPreferences)
+#     # bpy.utils.unregister_class(MonKeyDisplayProperties)
+#     bpy.utils.unregister_class(GRAPH_OT_select_adjacent_handles)
+#     bpy.utils.unregister_class(GRAPH_OT_draw_text)
+#     bpy.utils.unregister_class(GRAPH_OT_monkey_handle_selecter)
+#     bpy.utils.unregister_class(GRAPH_OT_monkey_vertically)
+#     bpy.utils.unregister_class(GRAPH_OT_monkey_horizontally)
 
 
 if __name__ == "__main__":
-    register()
+    pass
