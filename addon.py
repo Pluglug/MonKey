@@ -16,5 +16,5 @@ def uprefs():
 def prefs():
     return uprefs().addons[ADDON_ID].preferences
 
-def since_4_0_0():
-    return VERSION >= (4, 0, 0)
+# def since_4_0_0():  # Consider moving to constants.py
+#     return VERSION >= (4, 0, 0)
