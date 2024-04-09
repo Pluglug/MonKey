@@ -3,7 +3,8 @@ import os
 # import sys
 import traceback
 import warnings
-from .debug import log
+from .debug_utils import log
+
 
 VERSION = None
 BL_VERSION = None
@@ -39,6 +40,6 @@ def uprefs():
 
 
 def prefs():
-    caller = traceback.extract_stack(None, 2)[0]
+    caller = log.get_caller_info()
     log.warn(f"prefs() is deprecated. Use get_addon_preferences() instead. Called from {caller.filename}, line {caller.lineno}")
     return get_addon_preferences()
