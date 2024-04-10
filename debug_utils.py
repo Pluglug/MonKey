@@ -43,7 +43,12 @@ class Style(Enum):
     UNDERLINE = 4
     INVERTED = 7
 
-def ansi(*styles):
+def ansi(*styles: Enum) -> str:
+    """
+    Generate ANSI escape code for given styles.
+    :param styles: Enum(int) values from Color or Style
+    :return: String containing ANSI escape code
+    """
     return '\033[{}m'.format(";".join(str(color.value) for color in styles))
 
 
@@ -179,27 +184,27 @@ class PrintLog:
         self.indent_level = 0
         return self
     
-    def start_timer(self, msg, title=None):
-        """Timer start and call header()"""
-        self.header("Timer started: " + msg, title)
+    def start_stopwatch(self, msg, title=None):
+        """Stopwatch start and call header()"""
+        self.header("Stopwatch started: " + msg, title)
         self.timer = time.time()
-        return self
 
-    def time(self, *args):
-        """Display the elapsed time since the timer was started."""
+    def elapsed_time(self, *args):
+        """Display the elapsed time since the stopwatch was started."""
         if self.timer is None:
-            self.warn("Timer is not started.")
-            return self
+            self.warn("Stopwatch is not started.")
+            return
 
-        now = time.time()
-        self._log(ansi(Color.GREEN), f'{now - self.timer:.4f} sec', *args)
-        return self
-    
-    def stop_timer(self, msg="Timer stopped.", *args):
-        """Stop the timer"""
-        self.time(msg, *args)
-        self.timer = None
-        return self
+        elapsed = time.time() - self.timer
+        self._log(ansi(Color.GREEN), f'Elapsed time: {elapsed:.4f} sec', *args)
+
+    def stop_stopwatch(self, msg="Stopwatch stopped.", *args):
+        """Stop the stopwatch and display the total elapsed time."""
+        if self.timer is not None:
+            self.elapsed_time(msg, *args)
+            self.timer = None
+        else:
+            self.warn("Stopwatch is not started.")
 
 
 log = PrintLog()
@@ -211,11 +216,59 @@ log = PrintLog()
 #     DBG_HOGE and log.info("Processing item:", item, "Status:", process_status)
 
 
-__all__ = ["log"]
-# __all__ += [""]
+import bpy
+from bpy.types import PropertyGroup
+from bpy.props import BoolProperty
 
-# Collect all DBG_* flags
-__all__ += [name for name in globals() if name.startswith("DBG")]
+
+def _collect_debug_flags():
+    """Collect all DBG* flags and add them to a list."""
+    return [name for name in globals() if name.startswith("DBG")]
+
+
+# def _create_debug_properties_group():
+#     debug_flags = _collect_debug_flags()
+
+#     class DebugFlagsGroup(PropertyGroup):
+#         pass
+
+#     # Add a bool property to the class for each debug flag
+#     for flag in debug_flags:
+#         setattr(DebugFlagsGroup, flag, BoolProperty(name=flag, default=globals()[flag]))
+
+#     return DebugFlagsGroup
+
+
+class DebugFlagsGroup(PropertyGroup):
+    @classmethod
+    def _create_debug_properties(cls):
+        """Dynamically add debug flags as BoolProperties to the DebugFlagsGroup."""
+        for name in globals():
+            if name.startswith("DBG"):
+                setattr(cls, name, BoolProperty(name=name, default=globals()[name]))
+                DBG_INIT and log.info("Added debug flag:", name)
+
+    def draw(self, context, layout):
+        """Draw the UI elements for the debug flags."""
+        col = layout.column(heading="Debug Flags:")
+        col.use_property_split = True
+        col.use_property_decorate = False
+
+        for name in globals():
+            if name.startswith("DBG"):
+                col.prop(self, name)
+
+
+# def register():
+#     bpy.utils.register_class(DebugFlagsGroup)
+#     DebugFlagsGroup._create_debug_properties()
+
+#     bpy.types.Scene.debug_flags = bpy.props.PointerProperty(type=DebugFlagsGroup)
+
+
+__all__ = ["log"]
+__all__ += _collect_debug_flags()
+__all__ += ["DebugFlagsGroup"]
 
 
 if __name__ == "__main__":
