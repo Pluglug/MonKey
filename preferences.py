@@ -1,9 +1,9 @@
 # pyright: reportInvalidTypeForm=false
 import bpy
-# import rna_keymap_ui
 from rna_keymap_ui import draw_kmi
 
-from . debug import log, DBG_PREFS
+# from . debug import log, DBG_PREFS
+from . debug_utils import log, DBG_PREFS, DebugFlagsGroup
 
 from . addon import ADDON_ID
 
@@ -34,24 +34,29 @@ class MonKeyPreferences(bpy.types.AddonPreferences):
     overlay: bpy.props.PointerProperty(type=TextOverlaySettings)
     info_to_display: bpy.props.PointerProperty(type=ChannelInfoToDisplay)
 
+    debug_flags: bpy.props.PointerProperty(type=DebugFlagsGroup)
 
     def draw(self, context):
         layout = self.layout
 
         layout.prop(self, "tab", expand=True)
         if self.tab == 'HowToUse':
-            self.draw_description(layout)
+            self.draw_description(context, layout)
         elif self.tab == 'OVERLAY':
-            self.overlay.draw(layout)
+            self.overlay.draw(context, layout)
         elif self.tab == 'KEYMAP':
-            self.draw_keymap(layout)
+            self.draw_keymap(context, layout)
     
-    def draw_description(self, layout):
-        layout.label(text="This is a description")
-        # TODO: Add description
+    def draw_description(self, context, layout):
+        layout.label(text="TODO: Add description")
+        
+        layout.sepaletor()
 
-    def draw_keymap(self, layout):
-        wm = bpy.context.window_manager
+        layout.label(text="Debug options")
+        self.debug_flags.draw(context, layout)
+
+    def draw_keymap(self, context, layout):
+        wm = context.window_manager
         kc = wm.keyconfigs.user
         km = kc.keymaps.get('Graph Editor')
 
@@ -63,7 +68,7 @@ class MonKeyPreferences(bpy.types.AddonPreferences):
         for kmi in km.keymap_items:
             if kmi.idname in ops_idnames:
                 draw_kmi([], kc, km, kmi, layout, 0)
-                # layout.separator()
+
 
 # del ops_idnames
 # del GRAPH_OT_monkey_horizontally

@@ -1,5 +1,5 @@
 import bpy
-from ..debug import log, DBG_OPS
+from ..debug_utils import log, DBG_OPS
 from .dopesheet_helper import get_visible_objects, get_selected_keyframes
 
 # Keyframe handle selection toggling operator

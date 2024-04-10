@@ -1,4 +1,4 @@
-from . addon import VERSION  # __blender_version__
+from . addon import VERSION
 
 SINCE_4_0_0 = VERSION >= (4, 0, 0)
 

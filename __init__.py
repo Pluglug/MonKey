@@ -1,6 +1,6 @@
 import bpy
 
-from . debug import log, DBG_INIT
+from . debug_utils import log, DBG_INIT
 from . import addon
 
 bl_info = {
@@ -21,6 +21,7 @@ addon.BL_VERSION = bl_info["blender"]
 from . operators.keyframe_moving import GRAPH_OT_monkey_horizontally, GRAPH_OT_monkey_vertically
 from . operators.handle_selection import GRAPH_OT_monkey_handle_selecter
 from . preferences import MonKeyPreferences
+from . debug_utils import DebugFlagsGroup
 from . keymap import register_keymaps, unregister_keymaps
 
 # # reload submodules on addon restart
@@ -44,6 +45,7 @@ classes = (
     GRAPH_OT_monkey_vertically,
     GRAPH_OT_monkey_handle_selecter,
     MonKeyPreferences,
+    DebugFlagsGroup,
 )
 
 
@@ -60,6 +62,8 @@ def register():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
+    
+    DebugFlagsGroup._create_debug_properties()
     # bpy.types.Scene.monkey_preferences = bpy.props.PointerProperty(type=MonKeyPreferences)
     register_keymaps()
     # for name, package in module_names:  # TODO: 各モジュールのregisterを呼ぶ

@@ -4,9 +4,9 @@ import blf
 import re
 from time import time
 
-from . addon import prefs, since_4_0_0
+from . addon import prefs
 from . import constants as CC
-from . debug import log, DBG_OVLY
+from . debug_utils import log, DBG_OVLY
 
 
 def blf_size(font_id, size, *args, **kwargs):
@@ -321,7 +321,7 @@ class TextOverlaySettings(bpy.types.PropertyGroup):
         default=2, min=0,
     )
 
-    def draw(self, layout):
+    def draw(self, context, layout):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
@@ -461,6 +461,7 @@ class TextDisplayHandler:
         return self.draw_handler is not None
     
     def draw_callback(self, context):
+        generate_text_lines = None  # Delete
         pr = prefs()
 
         # Generate the text lines based on the current context
@@ -479,7 +480,14 @@ class TextDisplayHandler:
         
         for text in text_lines:
             # Get the screen position for the text based on the alignment
-            x, y = get_screen_position(context, text, pr.overlay_alignment, pr.overlay_offset_x, y_offset, font_id)
+            # x, y = get_screen_position(context, text, pr.overlay_alignment, pr.overlay_offset_x, y_offset, font_id)
+
+            x, y = calculate_aligned_position(
+                pr.overlay_alignment, 
+                context.region.width, context.region.height, 
+                blf.dimensions(font_id, text)[0], blf.dimensions(font_id, text)[1], 
+                pr.overlay_offset_x, y_offset
+            )
 
             # Draw the text at the calculated position
             blf.position(font_id, x, y, 0)
