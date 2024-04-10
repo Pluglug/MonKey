@@ -143,12 +143,13 @@ class PrintLog:
         frame = stack[2]
         frame_info = inspect.getframeinfo(frame[0])
 
-        return {
-            "filename": os.path.basename(frame_info.filename),
-            "lineno": frame_info.lineno,
-            "function": frame_info.function,
-            # "code_context": frame_info.code_context
-        }
+        return frame_info
+        # return {
+        #     "filename": os.path.basename(frame_info.filename),
+        #     "lineno": frame_info.lineno,
+        #     "function": frame_info.function,
+        #     # "code_context": frame_info.code_context
+        # }
 
     # あんまり便利じゃない 
     # `log(" " * len(path) + "/".join(path))`とかのほうがシンプルでよい
