@@ -20,6 +20,7 @@ addon.BL_VERSION = bl_info["blender"]
 
 from . operators.keyframe_moving import GRAPH_OT_monkey_horizontally, GRAPH_OT_monkey_vertically
 from . operators.handle_selection import GRAPH_OT_monkey_handle_selecter
+from . overlay import TextOverlaySettings, ChannelInfoToDisplay
 from . preferences import MonKeyPreferences
 from . debug_utils import DebugFlagsGroup
 from . keymap import register_keymaps, unregister_keymaps
@@ -41,11 +42,15 @@ from . keymap import register_keymaps, unregister_keymaps
 #     # reload(unregister_keymaps)
 
 classes = (
+    DebugFlagsGroup,
+    TextOverlaySettings,
+    ChannelInfoToDisplay,
+
+    MonKeyPreferences,
+    
     GRAPH_OT_monkey_horizontally,
     GRAPH_OT_monkey_vertically,
     GRAPH_OT_monkey_handle_selecter,
-    MonKeyPreferences,
-    DebugFlagsGroup,
 )
 
 
@@ -61,14 +66,23 @@ def register():
     DBG_INIT and log.info("Version: " + str(addon.VERSION))
     from bpy.utils import register_class
     for cls in classes:
-        register_class(cls)
+        try:
+            register_class(cls)
+            DBG_INIT and log.info("Registered class " + cls.__name__)
+        except Exception as e:
+            log.error("Failed to register class " + cls.__name__)
+            log.error(e)
+            unregister()
+            return
     
-    DebugFlagsGroup._create_debug_properties()
+    DebugFlagsGroup._create_debug_properties()  # ?
     # bpy.types.Scene.monkey_preferences = bpy.props.PointerProperty(type=MonKeyPreferences)
     register_keymaps()
     # for name, package in module_names:  # TODO: 各モジュールのregisterを呼ぶ
     #     mod = importlib.import_module(name, package)
     #     mod.register()
+
+    log.footer("MonKey registered", "INIT")
 
 
 def unregister():
@@ -80,8 +94,10 @@ def unregister():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
+        DBG_INIT and log.info("Unregistered class " + cls.__name__)
     # del bpy.types.Scene.monkey_preferences
-
+    # DebugFlagsGroup._remove_debug_properties()  # ?
+    log.footer("MonKey unregistered", "INIT")
 
 if __name__ == "__main__":
     pass

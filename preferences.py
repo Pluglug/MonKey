@@ -29,7 +29,7 @@ class MonKeyPreferences(bpy.types.AddonPreferences):
             ('KEYMAP', "Keymap", ""),
             ('OVERLAY', "Overlay", ""),
         ],
-        default='KEYMAP'
+        default='HowToUse'
     )
     overlay: bpy.props.PointerProperty(type=TextOverlaySettings)
     info_to_display: bpy.props.PointerProperty(type=ChannelInfoToDisplay)
@@ -39,20 +39,22 @@ class MonKeyPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
 
-        layout.prop(self, "tab", expand=True)
+        row = layout.row()
+        row.prop(self, "tab", expand=True)
+
+        box = layout.box()
         if self.tab == 'HowToUse':
-            self.draw_description(context, layout)
+            self.draw_description(context, box)
         elif self.tab == 'OVERLAY':
-            self.overlay.draw(context, layout)
+            self.overlay.draw(context, box)
+            box.separator()
+            self.info_to_display.draw(context, box)
         elif self.tab == 'KEYMAP':
-            self.draw_keymap(context, layout)
+            self.draw_keymap(context, box)
     
     def draw_description(self, context, layout):
         layout.label(text="TODO: Add description")
-        
-        layout.sepaletor()
 
-        layout.label(text="Debug options")
         self.debug_flags.draw(context, layout)
 
     def draw_keymap(self, context, layout):

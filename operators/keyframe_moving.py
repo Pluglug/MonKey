@@ -37,7 +37,9 @@ class GRAPH_OT_monkey_horizontally(bpy.types.Operator):
             self.report({'ERROR'}, "There is no object that is displayed and has an action.")
             return {'CANCELLED'}
 
+        DBG_OPS and log.header("Move Keyframe Selection Horizontally", "EXECUTE")
         move_keyframe_selection_horizontally(self.direction, self.extend, visible_objects)
+        DBG_OPS and log.footer("Move Keyframe Selection Horizontally")
         return {'FINISHED'}
 
 
@@ -73,7 +75,9 @@ class GRAPH_OT_monkey_vertically(bpy.types.Operator):
             self.report({'ERROR'}, "There is no object that is displayed and has an action.")
             return {'CANCELLED'}
         
+        DBG_OPS and log.header("Move Channel Selection Vertically", "EXECUTE")
         move_channel_selection_vertically(self.direction, self.extend, visible_objects)
+        DBG_OPS and log.footer("Move Channel Selection Vertically")
         return {'FINISHED'}
 
 
