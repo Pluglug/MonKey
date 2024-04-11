@@ -79,26 +79,27 @@ class PrintLog:
         else:
             print(msg)
 
-    def header(self, msg, title=None):
+    def header(self, msg=None, title=None):
         """Green text indicating the start of a new operation."""
         print("")
-
         if title is not None:
             title = str(title)
             header_length = max(len(msg), self.line_length)  # len(title)+8)
             title_text = title.center(header_length, '-')
-            self._log(ansi(Color.GREEN, Style.BOLD), title_text)
-
+        else:
+            title_text = "-" * self.line_length
+        self._log(ansi(Color.GREEN, Style.BOLD), title_text)
         if msg:
             self._log(ansi(Color.GREEN, Style.BOLD), msg)
-
         return self
     
     def footer(self, *args):
         """Green text indicating the end of an operation."""
         self.reset_indent()
-        self._log(ansi(Color.CYAN), *args)
-        self._log(ansi(Color.CYAN), "-" * self.line_length)
+        # self._log(ansi(Color.CYAN), *args)
+        # self._log(ansi(Color.CYAN), "-" * self.line_length)
+        footer_text = ", ".join(str(arg) for arg in args)
+        self._log(ansi(Color.CYAN), footer_text + "\n" + "-" * self.line_length)
         print("")
         return self
 
@@ -108,7 +109,7 @@ class PrintLog:
         return self
 
     def info2(self, *args):
-        """Blue text indicating the progress of an operation."""
+        """Cyan text indicating the progress of an operation."""
         self._log(ansi(Color.CYAN), *args)
         return self
     
@@ -122,10 +123,16 @@ class PrintLog:
         self._log(ansi(Color.YELLOW), *args)
         return self
 
-    # def warning(self, *args):
-    #     self.warn(*args)
-    #     self.warn("warn() is recommended over warning().")
-    #     return self
+    warning = warn
+
+    def bl_report(self, *args):
+        """Display the arguments in Blender's report system."""
+        try:
+            import bpy
+            bpy.ops.wm.report({'ERROR'}, message=", ".join(str(arg) for arg in args))
+        except Exception as e:
+            self.error(f"Failed to report error in Blender: {e}")
+        return self
 
     def __call__(self, *args):
         """Display the arguments in blue."""
@@ -184,28 +191,87 @@ class PrintLog:
         """Reset the indent level to zero."""
         self.indent_level = 0
         return self
-    
-    def start_stopwatch(self, msg, title=None):
-        """Stopwatch start and call header()"""
-        self.header("Stopwatch started: " + msg, title)
-        self.timer = time.time()
 
-    def elapsed_time(self, *args):
-        """Display the elapsed time since the stopwatch was started."""
-        if self.timer is None:
-            self.warn("Stopwatch is not started.")
-            return
-
-        elapsed = time.time() - self.timer
-        self._log(ansi(Color.GREEN), f'Elapsed time: {elapsed:.4f} sec', *args)
-
-    def stop_stopwatch(self, msg="Stopwatch stopped.", *args):
-        """Stop the stopwatch and display the total elapsed time."""
-        if self.timer is not None:
-            self.elapsed_time(msg, *args)
+    class Stopwatch:
+        def __init__(self, log):
+            self.log = log
             self.timer = None
-        else:
-            self.warn("Stopwatch is not started.")
+            self._lap_times = []
+
+        def start(self, msg, title=None):
+            """Stopwatch start and call header()"""
+            self.log.header("Stopwatch started: " + msg, title)
+            self.timer = time.time()
+
+        def elapsed(self, *args):
+            """Display the elapsed time since the stopwatch was started."""
+            if self.timer is None:
+                self.log.warn("Stopwatch is not started.")
+                return
+
+            elapsed = time.time() - self.timer
+            self.log._log(ansi(Color.GREEN), f'Elapsed time: {elapsed:.4f} sec', *args)
+
+        def lap(self, label=None):
+            if self.timer is None:
+                self.log.warn("Stopwatch is not started.")
+                return
+
+            elapsed_time = self.elapsed()
+            self._lap_times.append((label, elapsed_time))
+            return elapsed_time
+        
+        def reset(self):
+            self.timer = None
+            self._lap_times.clear()
+        
+        def stop(self, msg="Stopwatch stopped.", *args):
+            """Stop the stopwatch and display the total elapsed time."""
+            if self.timer is not None:
+                self.elapsed(msg, *args)
+                self.timer = None
+            else:
+                self.log.warn("Stopwatch is not started.")
+        
+        def __enter__(self):
+            self.start()
+            return self
+        
+        def __exit__(self, exc_type, exc_value, traceback):
+            elapsed_time = self.elapsed()
+            self.stop()
+            return elapsed_time
+        
+        def __call__(self, func):
+            def wrapper(*args, **kwargs):
+                with self:
+                    return func(*args, **kwargs)
+            return wrapper
+        
+        @property
+        def lap_times(self):
+            return self._lap_times
+        
+        @property
+        def total_time(self):
+            return sum(t for _, t in self._lap_times)
+        
+        @property
+        def average_time(self):
+            if not self._lap_times:
+                return 0
+            return self.total_time / len(self._lap_times)
+        
+        @property
+        def min_time(self):
+            return min(t for _, t in self._lap_times) if self._lap_times else 0
+        
+        @property
+        def max_time(self):
+            return max(t for _, t in self._lap_times) if self._lap_times else 0
+
+    def stopwatch(self):
+        return self.Stopwatch(self)
 
 
 log = PrintLog()

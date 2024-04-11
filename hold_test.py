@@ -1,3 +1,4 @@
+from typing import Any
 import bpy
 from time import time
 
@@ -16,28 +17,29 @@ from time import time
 
 
 class Timer:
-    def __init__(self, duration):
-        self.duration = duration
-        self.reset(duration)
+    def __init__(self):
+        self._start_time = None
 
-    def update(self):
-        current_time = time()
-        elapsed_time = current_time - self.start_time
-        self.remaining_time -= elapsed_time
-        self.start_time = current_time
-        return self.remaining_time <= 0
+    def start(self):
+        if self._start_time is not None:
+            raise RuntimeError("Timer is already running.")
+        self._start_time = time.time()
 
-    def reset(self, duration=None):
-        if duration is not None:
-            self.duration = duration
-        self.remaining_time = self.duration
-        self.start_time = time()
+    def elapsed(self):
+        if self._start_time is None:
+            raise RuntimeError("Timer has not been started.")
+        return time.time() - self._start_time
 
-    def elapsed_ratio(self):
-        return max(0, min(1, (self.duration - self.remaining_time) / self.duration))
+    def reset(self):
+        self._start_time = None
 
-    def is_finished(self):
-        return self.remaining_time <= 0
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.elapsed()
+        self.reset()
 
 
 class OBJECT_OT_call_my_menu(bpy.types.Operator):
@@ -55,38 +57,38 @@ class OBJECT_OT_call_my_menu(bpy.types.Operator):
 
     def modal(self, context, event):
         if event.type == 'Q' and event.value == 'RELEASE':
-            log.yellow("Key released",
-                 "Timer finished" if self._timer.is_finished() else "Timer cancelled")
-            
-            if self._timer.is_finished():
+            Log.info("Key released")
+
+            if self._timer.elapsed() >= self.hold_time:
                 bpy.ops.wm.call_menu(name="OBJECT_MT_my_hold_menu")
-                log.green("Menu called")
+                Log.info("Menu called")
             self.cancel(context)
-            log.footer("Modal finished")
+            Log.footer("Modal finished")
             # return {'FINISHED'}
             return {'CANCELLED'}
 
-        if self._timer.update():
-            log.blue("Timer finished")
+        if self._timer.elapsed() >= self.hold_time:
+            Log.info("Key held")
             # Do something if the key is held for the duration
             pass
 
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        log.red("Execute called, this should not happen")
+        Log.error("This operator should be called as a modal operator")
         return {'CANCELLED'}
 
     def invoke(self, context, event):
-        log.header("Key pressed", "INVOKED")
-        self._timer = Timer(self.hold_time)
+        Log.header("Invoke", "INIT")
+        self._timer = Timer()
+        self._timer.start()
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
     def cancel(self, context):
         if self._timer:
             del self._timer
-            log.yellow("Timer deleted")
+            Log.info("Timer deleted")
 
 
 class OBJECT_MT_my_hold_menu(bpy.types.Menu):
@@ -160,53 +162,168 @@ def _keymap() -> list:
 #     log.footer("Hold Test unregistered")
 
 
-class log:
-    @classmethod
-    def _print(cls, color, *args) -> None:  
-        msg = ""
-        for arg in args:
-            if msg:
-                msg += ", "
-            msg += str(arg)
-        print(color + msg + '\033[0m')
-    
-    @classmethod
-    def blue(cls, *args):
-        cls._print('\033[34m', *args)
+# Logger v2
+class Log:
+    """Simple Print Logger with colors"""
+    class _style:
+        # Colors can add 10 and 60
+        BLACK = 30
+        RED = 31
+        GREEN = 32
+        YELLOW = 33
+        BLUE = 34
+        MAGENTA = 35
+        CYAN = 36
+        WHITE = 37
+
+        # Styles
+        BOLD = 1
+        FAINT = 2
+        ITALIC = 3
+        UNDERLINE = 4
+        INVERTED = 7
+        
+        # Reset
+        END = 0
+
+    LINE_LENGTH = 50
 
     @classmethod
-    def green(cls, *args):
-        cls._print('\033[32m', *args)
-    
-    @classmethod
-    def magenta(cls, *args):
-        cls._print('\033[35m', *args)
-    
-    @classmethod
-    def red(cls, *args):
-        cls._print('\033[31m', *args)
+    def ansi(cls, *codes):
+        return f'\033[{";".join(str(code) for code in codes)}m'
 
     @classmethod
-    def yellow(cls, *args):
-        cls._print('\033[33m', *args)
+    def color_print(cls, color, *args):
+        msg = ", ".join(str(arg) for arg in args)
+        try:
+            if isinstance(color, (tuple, list)):
+                color_code = cls.ansi(*color)
+            else:
+                color_code = cls.ansi(color)
+            print(f"{color_code}{msg}{cls.ansi(cls._style.END)}")
+        except Exception as e:
+            try:
+                import bpy
+                bpy.ops.wm.report({'ERROR'}, message=f"Logging error: {e}")
+            except Exception as import_error:
+                print(f"Logging error: {import_error}")
+    
+    @classmethod
+    def info(cls, *args):
+        cls.color_print(cls._style.BLUE, *args)
 
     @classmethod
-    def header(cls, msg, title=None):
+    def warn(cls, *args):
+        cls.color_print(cls._style.YELLOW, *args)
+    
+    warning = warn
+
+    @classmethod
+    def error(cls, *args):
+        cls.color_print(cls._style.RED, *args)
+    
+    @classmethod
+    def bl_report(cls, *args):
+        cls.info(*args)
+        try:
+            import bpy
+            bpy.ops.wm.report({'INFO'}, message=", ".join(str(arg) for arg in args))
+        except Exception as import_error:
+            cls.error(f"Logging error: {import_error}")
+
+    @classmethod
+    def bl_error(cls, *args):
+        cls.error(*args)
+        try:
+            import bpy
+            bpy.ops.wm.report({'ERROR'}, message=", ".join(str(arg) for arg in args))
+        except Exception as import_error:
+            cls.error(f"Logging error: {import_error}")
+
+    @classmethod
+    def header(cls, msg=None, title=None):
         print("")
-        if title is not None:
-            title = str(title)
-            header_length = max(len(msg), 50)
-            title_text = title.center(header_length, '-')
-            cls._print('\033[1;32m', title_text)
+        header_length = cls.LINE_LENGTH if msg is None else max(len(msg), cls.LINE_LENGTH)
+        title_text = (title.center(header_length, '-') if title is not None else "-" * header_length)
+        cls.color_print((cls._style.GREEN, cls._style.BOLD), title_text)
         if msg:
-            cls._print('\033[1;32m', msg)
+            cls.color_print((cls._style.BOLD, cls._style.GREEN), msg)
     
     @classmethod
     def footer(cls, *args):
-        cls._print('\033[36m', *args)
-        cls._print('\033[36m', "-" * 50)
+        footer_text = ", ".join(str(arg) for arg in args)
+        cls.color_print(cls._style.CYAN, footer_text + "\n" + "-" * cls.LINE_LENGTH)
         print("")
 
 
+class DebugTimer:
+    def __init__(self):
+        self._start_time = None
+        self._lap_times = []
+
+    def print_time(self, *args):
+        color = (
+            Log._style.WHITE + 10,  # White background
+            Log._style.BOLD
+        )
+        Log.color_print(color, *args)
+
+    def start(self, msg=None, title=None):
+        if self._start_time is not None:
+            raise RuntimeError("Timer is already running.")
+        self._start_time = time()
+        Log.header(msg, title)
+
+    def elapsed(self):
+        if self._start_time is None:
+            raise RuntimeError("Timer has not been started.")
+        return time() - self._start_time
+
+    def reset(self):
+        self._start_time = None
+        self._lap_times.clear()
+
+    def lap(self, label=None):
+        if self._start_time is None:
+            raise RuntimeError("Timer has not been started.")
+        lap_time = time() - self._start_time
+        self._lap_times.append((label, lap_time))
+        
+        self.print_time(f"Lap {len(self._lap_times)}: {label if label else 'No label'} - {lap_time:.4f} sec ")
+        return lap_time
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        elapsed = self.elapsed()
+        self.print_time(f"Elapsed time: {elapsed:.4f} sec")
+        self.reset()
+        return elapsed
+    
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+        return wrapper
+    
+    @property
+    def lap_times(self):
+        """Can be used to find sums, averages, minimum maximum values, etc."""
+        return self._lap_times
+    
+    @property
+    def total_time(self):
+        return sum(t for _, t in self._lap_times)
+
+
+debug_timer = DebugTimer()
+
+
 if __name__ == "__main__":
-    pass
+    # DebugTimer Test
+    with DebugTimer() as timer:
+        timer.lap("Start")
+        timer.lap("Middle")
+        timer.lap("End")
