@@ -325,19 +325,26 @@ class TextOverlaySettings(bpy.types.PropertyGroup):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.label(text="Text Overlay Settings")
+        col = layout.column()
+
+        col.label(text="Text Overlay Settings", icon='IMAGE_ALPHA')
         # layout.prop(self, "show_text")
-        layout.prop(self, "size")
-        layout.prop(self, "color")
-        layout.prop(self, "alignment")
-        layout.prop(self, "duration")
-        layout.prop(self, "offset_x")
-        layout.prop(self, "offset_y")
-        layout.prop(self, "use_shadow")
-        layout.prop(self, "shadow_color")
-        layout.prop(self, "shadow_blur")
-        layout.prop(self, "shadow_offset_x")
-        layout.prop(self, "shadow_offset_y")
+        col.prop(self, "size")
+        col.prop(self, "color")
+        col.prop(self, "alignment")
+        col.prop(self, "duration")
+        col.prop(self, "offset_x")
+        col.prop(self, "offset_y")
+
+        col.separator()
+
+        col.prop(self, "use_shadow")
+        sub = col.column()
+        sub.active = self.use_shadow
+        sub.prop(self, "shadow_color")
+        sub.prop(self, "shadow_blur")
+        sub.prop(self, "shadow_offset_x")
+        sub.prop(self, "shadow_offset_y")
     
 
 # function to channel info
@@ -430,15 +437,16 @@ class ChannelInfoToDisplay(bpy.types.PropertyGroup):
         default=True,
     )
 
-    def draw(self, layout):
+    def draw(self, context, layout):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-        layout.label(text="Channel Info to Display")
-        layout.prop(self, "object_name")
-        layout.prop(self, "action_name")
-        layout.prop(self, "group_name")
-        layout.prop(self, "channel_name")
+        col = layout.column(heading="Channel Info to Display")
+
+        col.prop(self, "object_name")
+        col.prop(self, "action_name")
+        col.prop(self, "group_name")
+        col.prop(self, "channel_name")
 
 
 

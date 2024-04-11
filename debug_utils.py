@@ -241,16 +241,40 @@ def _collect_debug_flags():
 
 
 class DebugFlagsGroup(PropertyGroup):
+    developer_mode: BoolProperty(name="Developer Mode", default=False)
+
     @classmethod
     def _create_debug_properties(cls):
         """Dynamically add debug flags as BoolProperties to the DebugFlagsGroup."""
         for name in globals():
             if name.startswith("DBG"):
-                setattr(cls, name, BoolProperty(name=name, default=globals()[name]))
+                setattr(
+                    cls, name, 
+                    BoolProperty(
+                        name=name, 
+                        default=globals()[name], 
+                        update=cls._generate_update_function(name)
+                    )
+                )
                 DBG_INIT and log.info("Added debug flag:", name)
+
+    @staticmethod
+    def _generate_update_function(name):  # 無理っぽい Sceneへフラグを追加しなければならない
+        def update(self, context):
+            globals()[name] = getattr(self, name)
+        return update
 
     def draw(self, context, layout):
         """Draw the UI elements for the debug flags."""
+        layout.prop(
+            self, "developer_mode", text="Developer Mode", 
+            toggle=True, icon="SCRIPT")
+
+        if self.developer_mode:
+            box = layout.box()
+            self._draw_debug_flags(box)
+
+    def _draw_debug_flags(self, layout):
         col = layout.column(heading="Debug Flags:")
         col.use_property_split = True
         col.use_property_decorate = False
@@ -258,7 +282,6 @@ class DebugFlagsGroup(PropertyGroup):
         for name in globals():
             if name.startswith("DBG"):
                 col.prop(self, name)
-
 
 # def register():
 #     bpy.utils.register_class(DebugFlagsGroup)
