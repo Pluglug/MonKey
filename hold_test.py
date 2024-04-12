@@ -162,11 +162,39 @@ def _keymap() -> list:
 #     log.footer("Hold Test unregistered")
 
 
+class Caller:
+
+    @staticmethod
+    def log_printer(func):
+        def log_printer(Log, *args, **kwargs):
+            import traceback
+            frame = traceback.extract_stack()[-2]
+            module_name = frame.filename.split('\\')[-1]
+            info = f"{module_name.ljust(10)} line {str(frame.lineno).ljust(4)} in {frame.name.ljust(10)}"
+            func(Log, info, *args, **kwargs)
+        return log_printer
+
+    @staticmethod
+    def get_caller_info():
+        import inspect
+        stack = inspect.stack()
+        # 0: get_caller_info, 1: get_caller_info, 2: caller, 3: caller's caller
+        if len(stack) < 3:
+            return None
+        
+        frame = stack[2]
+        frame_info = inspect.getframeinfo(frame[0])
+        return frame_info
+
+
 # Logger v2
 class Log:
-    """Simple Print Logger with colors"""
+    """Simple Print Logger with colors."""
+
     class _style:
-        # Colors can add 10 and 60
+        """Style definitions for logging."""
+        # Base colors can be modified 
+        # by adding 10 for background or 60 for bright.
         BLACK = 30
         RED = 31
         GREEN = 32
@@ -177,83 +205,72 @@ class Log:
         WHITE = 37
 
         # Styles
+        RESET = 0
         BOLD = 1
         FAINT = 2
         ITALIC = 3
         UNDERLINE = 4
         INVERTED = 7
-        
-        # Reset
-        END = 0
 
     LINE_LENGTH = 50
 
     @classmethod
-    def ansi(cls, *codes):
+    def ansi(cls, *codes: int) -> str:
+        """Generates an ANSI escape code string from style codes."""
         return f'\033[{";".join(str(code) for code in codes)}m'
 
     @classmethod
     def color_print(cls, color, *args):
         msg = ", ".join(str(arg) for arg in args)
         try:
-            if isinstance(color, (tuple, list)):
-                color_code = cls.ansi(*color)
-            else:
-                color_code = cls.ansi(color)
-            print(f"{color_code}{msg}{cls.ansi(cls._style.END)}")
+            if not isinstance(color, (tuple, list)):
+                color = [color]
+            print(f"{cls.ansi(*color)}{msg}{cls.ansi(cls._style.RESET)}")
         except Exception as e:
-            try:
-                import bpy
-                bpy.ops.wm.report({'ERROR'}, message=f"Logging error: {e}")
-            except Exception as import_error:
-                print(f"Logging error: {import_error}")
-    
+            print(f"Logging error: {e}")
+
     @classmethod
+    @Caller.log_printer
     def info(cls, *args):
         cls.color_print(cls._style.BLUE, *args)
 
     @classmethod
+    @Caller.log_printer
     def warn(cls, *args):
         cls.color_print(cls._style.YELLOW, *args)
     
-    warning = warn
-
     @classmethod
+    @Caller.log_printer
     def error(cls, *args):
         cls.color_print(cls._style.RED, *args)
     
-    @classmethod
-    def bl_report(cls, *args):
-        cls.info(*args)
-        try:
-            import bpy
-            bpy.ops.wm.report({'INFO'}, message=", ".join(str(arg) for arg in args))
-        except Exception as import_error:
-            cls.error(f"Logging error: {import_error}")
+    # --- Additional methods ---
 
     @classmethod
-    def bl_error(cls, *args):
-        cls.error(*args)
-        try:
-            import bpy
-            bpy.ops.wm.report({'ERROR'}, message=", ".join(str(arg) for arg in args))
-        except Exception as import_error:
-            cls.error(f"Logging error: {import_error}")
-
-    @classmethod
-    def header(cls, msg=None, title=None):
+    @Caller.log_printer
+    def header(cls, *args, title=None):
         print("")
-        header_length = cls.LINE_LENGTH if msg is None else max(len(msg), cls.LINE_LENGTH)
-        title_text = (title.center(header_length, '-') if title is not None else "-" * header_length)
-        cls.color_print((cls._style.GREEN, cls._style.BOLD), title_text)
-        if msg:
-            cls.color_print((cls._style.BOLD, cls._style.GREEN), msg)
+        title_line, msg = cls._gen_section(*args, title=title)
+        cls.color_print(
+            (cls._style.GREEN, cls._style.BOLD), 
+            title_line + (f"\n{msg}" if args else "")
+        )
     
     @classmethod
-    def footer(cls, *args):
-        footer_text = ", ".join(str(arg) for arg in args)
-        cls.color_print(cls._style.CYAN, footer_text + "\n" + "-" * cls.LINE_LENGTH)
+    @Caller.log_printer
+    def footer(cls, *args, title=None):
+        title_line, msg = cls._gen_section(*args, title=title)
+        cls.color_print(
+            cls._style.CYAN, 
+            (f"{msg}\n" if args else "") + title_line)
         print("")
+
+    @classmethod
+    def _gen_section(cls, *args, title=None):
+        msg = ", ".join(str(arg) for arg in args).strip()
+        section_length = cls.LINE_LENGTH if not args else max(len(msg), cls.LINE_LENGTH)
+        title_line = (title.center(section_length, '-') if title is not None else "-" * section_length)
+        return title_line, msg
 
 
 class DebugTimer:
@@ -297,10 +314,15 @@ class DebugTimer:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        elapsed = self.elapsed()
-        self.print_time(f"Elapsed time: {elapsed:.4f} sec")
-        self.reset()
-        return elapsed
+        if self._start_time is not None:
+            elapsed = self.elapsed()
+            self.print_time(f"Elapsed time: {elapsed:.4f} sec")
+            self.reset()
+
+        if exc_type is not None:
+            Log.error(f"An exception occurred: {exc_value}\n{Log.ansi(Log._style.CYAN)}{traceback}")
+            return False
+        return True
     
     def __call__(self, func):
         def wrapper(*args, **kwargs):
@@ -322,8 +344,4 @@ debug_timer = DebugTimer()
 
 
 if __name__ == "__main__":
-    # DebugTimer Test
-    with DebugTimer() as timer:
-        timer.lap("Start")
-        timer.lap("Middle")
-        timer.lap("End")
+    pass

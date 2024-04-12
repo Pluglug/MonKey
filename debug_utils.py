@@ -125,15 +125,6 @@ class PrintLog:
 
     warning = warn
 
-    def bl_report(self, *args):
-        """Display the arguments in Blender's report system."""
-        try:
-            import bpy
-            bpy.ops.wm.report({'ERROR'}, message=", ".join(str(arg) for arg in args))
-        except Exception as e:
-            self.error(f"Failed to report error in Blender: {e}")
-        return self
-
     def __call__(self, *args):
         """Display the arguments in blue."""
         self.info(*args)
