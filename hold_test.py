@@ -165,17 +165,19 @@ def _keymap() -> list:
 class Caller:
 
     @staticmethod
-    def log_printer(func):
-        def log_printer(Log, *args, **kwargs):
+    def report_log_position(func):
+        """Decorator to report the position of the caller in the log message."""
+        def report_log_position(Log, *args, **kwargs):
             import traceback
             frame = traceback.extract_stack()[-2]
             module_name = frame.filename.split('\\')[-1]
             info = f"{module_name.ljust(10)} line {str(frame.lineno).ljust(4)} in {frame.name.ljust(10)}"
             func(Log, info, *args, **kwargs)
-        return log_printer
+        return report_log_position
 
     @staticmethod
     def get_caller_info():
+        """Get the file name, line number, and function name of the caller."""
         import inspect
         stack = inspect.stack()
         # 0: get_caller_info, 1: get_caller_info, 2: caller, 3: caller's caller
@@ -212,42 +214,37 @@ class Log:
         UNDERLINE = 4
         INVERTED = 7
 
-    LINE_LENGTH = 50
-
     @classmethod
     def ansi(cls, *codes: int) -> str:
         """Generates an ANSI escape code string from style codes."""
         return f'\033[{";".join(str(code) for code in codes)}m'
 
+    LINE_LENGTH = 50
+    USE_COLORS = False
+
     @classmethod
     def color_print(cls, color, *args):
         msg = ", ".join(str(arg) for arg in args)
-        try:
-            if not isinstance(color, (tuple, list)):
-                color = [color]
-            print(f"{cls.ansi(*color)}{msg}{cls.ansi(cls._style.RESET)}")
-        except Exception as e:
-            print(f"Logging error: {e}")
+        if not cls.USE_COLORS:
+            print(msg); return
+        color = [color] if not isinstance(color, (tuple, list)) else color
+        print(f"{cls.ansi(*color)}{msg}{cls.ansi(cls._style.RESET)}")
 
     @classmethod
-    @Caller.log_printer
     def info(cls, *args):
         cls.color_print(cls._style.BLUE, *args)
 
     @classmethod
-    @Caller.log_printer
     def warn(cls, *args):
         cls.color_print(cls._style.YELLOW, *args)
     
     @classmethod
-    @Caller.log_printer
     def error(cls, *args):
         cls.color_print(cls._style.RED, *args)
     
     # --- Additional methods ---
 
     @classmethod
-    @Caller.log_printer
     def header(cls, *args, title=None):
         print("")
         title_line, msg = cls._gen_section(*args, title=title)
@@ -257,7 +254,6 @@ class Log:
         )
     
     @classmethod
-    @Caller.log_printer
     def footer(cls, *args, title=None):
         title_line, msg = cls._gen_section(*args, title=title)
         cls.color_print(
@@ -306,7 +302,7 @@ class DebugTimer:
         lap_time = time() - self._start_time
         self._lap_times.append((label, lap_time))
         
-        self.print_time(f"Lap {len(self._lap_times)}: {label if label else 'No label'} - {lap_time:.4f} sec ")
+        self.print_time(f"- Lap {len(self._lap_times)}: {label if label else 'No label'} - {lap_time:.4f} ")
         return lap_time
 
     def __enter__(self):
@@ -344,4 +340,6 @@ debug_timer = DebugTimer()
 
 
 if __name__ == "__main__":
-    pass
+    # Log Test
+    Log.header("Log Test", title="INIT")
+    Log.info("Info message")

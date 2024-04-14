@@ -96,8 +96,6 @@ class PrintLog:
     def footer(self, *args):
         """Green text indicating the end of an operation."""
         self.reset_indent()
-        # self._log(ansi(Color.CYAN), *args)
-        # self._log(ansi(Color.CYAN), "-" * self.line_length)
         footer_text = ", ".join(str(arg) for arg in args)
         self._log(ansi(Color.CYAN), footer_text + "\n" + "-" * self.line_length)
         print("")

@@ -4,7 +4,7 @@ from . debug_utils import log, DBG_INIT
 from . import addon
 
 bl_info = {
-    "name": "MonKey",
+    "name": "MonKey",  # Monkey Keyframe, Graph Monkey
     "author": "Pluglug",
     "version": (0, 6, 0),
     "blender": (2, 80, 0),

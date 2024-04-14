@@ -278,7 +278,7 @@ class TextOverlaySettings(bpy.types.PropertyGroup):
     duration: bpy.props.FloatProperty(
         name="Duration",
         description="Duration of the text display",
-        default=1.0, min=0.0,
+        default=1.0, min=0.0, subtype='TIME_ABSOLUTE',
     )
     offset_x: bpy.props.IntProperty(
         name="Offset X", description="Offset from area edge",
