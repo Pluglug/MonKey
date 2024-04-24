@@ -220,7 +220,7 @@ class Log:
         return f'\033[{";".join(str(code) for code in codes)}m'
 
     LINE_LENGTH = 50
-    USE_COLORS = False
+    USE_COLORS = True
 
     @classmethod
     def color_print(cls, color, *args):
